@@ -7,7 +7,7 @@ A: Search every box whose length is 2. Next, find their peers whether it has the
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
-A: *Student should provide answer here*
+A: for each box in diagonal, add corresponding diagonal box into their peer
 
 ### Install
 
