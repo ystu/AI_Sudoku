@@ -1,5 +1,7 @@
 assignments = []
 
+
+
 def assign_value(values, box, value):
     """
     Please use this function to update your values dictionary!
@@ -33,39 +35,54 @@ def naked_twins(values):
             twins = values[box]
             for peer in peers[box]:
                 if twins == values[peer]:
+                    # find their intersection
+                    inter_peers = set(peers[box]) & set(peers[peer])
                     # same twins, remove other digit
-                    values = removeOtherDigit(values, peers[box], twins) # e.g. twins '23'
+                    values = removeOtherDigit(values, inter_peers, twins) # e.g. twins '23'
 
 
     return values
 
 
-def removeOtherDigit(values, box_peers, twins):
-    print ('twins = ' + str(twins))
-    print('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
-    display(values)
-    print
+def removeOtherDigit(values, inter_peers, twins):
 
-    for peer in box_peers:
+    for peer in inter_peers:
         peer_num = values[peer]
         if peer_num != twins and len(peer_num) > 1:
             num = peer_num
-            num = num.replace(twins[0], '')
-            num = num.replace(twins[1], '')
+            for digit in twins:
+                num = num.replace(digit, '')
             values = assign_value(values, peer, num)
-            print('*******************************************')
-            display(values)
-            print
 
-    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-    display(values)
-    print
     return values
 
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
     return [s + t for s in A for t in B]
+
+
+rows = 'ABCDEFGHI'
+cols = '123456789'
+boxes = cross(rows, cols)
+
+row_units = [cross(r, cols) for r in rows]
+column_units = [cross(rows, c) for c in cols]
+square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
+unitlist = row_units + column_units + square_units
+
+# two diagonal peer
+dia1 = [rows[i] + cols[i] for i in range(len(rows))]
+dia2 = [rows[i] + cols[len(rows) - i - 1] for i in range(len(rows))]
+
+# add two diagonal into unitlist
+unitlist.append(dia1)
+unitlist.append(dia2)
+
+# create peers
+units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
+peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
+
 
 def grid_values(grid):
     """
@@ -77,7 +94,6 @@ def grid_values(grid):
             Keys: The boxes, e.g., 'A1'
             Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
-
     values = []
     all_digits = '123456789'
     for c in grid:
@@ -87,7 +103,7 @@ def grid_values(grid):
             values.append(c)
     assert len(values) == 81
     return dict(zip(boxes, values))
-    
+
 
 
 def display(values):
@@ -109,7 +125,7 @@ def eliminate(values):
     for box in solved_values:
         digit = values[box]
         for peer in peers[box]:
-            values[peer] = values[peer].replace(digit,'')
+            values = assign_value(values, peer, values[peer].replace(digit,''))
     return values
 
 def only_choice(values):
@@ -117,9 +133,21 @@ def only_choice(values):
         for digit in '123456789':
             dplaces = [box for box in unit if digit in values[box]]
             if len(dplaces) == 1:
-                values[dplaces[0]] = digit
-                # assign_value(values, dplaces[0], digit)
+                assign_value(values, dplaces[0], digit)
     return values
+
+def haveTwins(values, twin):
+    # if len > 2, it's not twins
+    if(len(values[twin]) != 2):
+        return False
+    # check each peers to find twins
+    for box in peers[twin]:
+        if values[box] == twin:
+            return True
+
+    # there are no twins
+    return False
+
 
 def reduce_puzzle(values):
     stalled = False
@@ -132,6 +160,7 @@ def reduce_puzzle(values):
         values = only_choice(values)
         # naked twins
         values = naked_twins(values)
+
         # Check how many boxes have a determined value, to compare
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         # If no new values were added, stop the loop.
@@ -145,11 +174,11 @@ def search(values):
     values = reduce_puzzle(values)
     if values is False:
         return False ## Failed earlier
-    if all(len(values[s]) == 1 for s in boxes): 
+    if all(len(values[s]) == 1 for s in boxes):
         return values ## Solved!
     # Choose one of the unfilled squares with the fewest possibilities
     n,s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
-    # Now use recurrence to solve each one of the resulting sudokus, and 
+    # Now use recurrence to solve each one of the resulting sudokus, and
     for value in values[s]:
         new_sudoku = values.copy()
         new_sudoku[s] = value
@@ -180,35 +209,15 @@ def solve(grid):
 
 if __name__ == '__main__':
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
-    example_grid = '..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3..'
-    
-    rows = 'ABCDEFGHI'
-    cols = '123456789'
-    boxes = cross(rows, cols)
 
-    row_units = [cross(r, cols) for r in rows]
-    column_units = [cross(rows, c) for c in cols]
-    square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-    unitlist = row_units + column_units + square_units
-    units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
-    peers = dict((s, set(sum(units[s],[]))- set([s])) for s in boxes)
+    print ("initialize...")
+    display(grid_values(diag_sudoku_grid))
 
-    # two diagnoal peer
-    dia1 = set([rows[i] + cols[i] for i in xrange(len(rows))])
-    dia2 = set([rows[i] + cols[len(rows) - i - 1] for i in xrange(len(rows))])
-    for box in dia1:
-        peers[box].update(dia1) # add diagonal peer
-        peers[box].remove(box) # remove itself in peer
-    for box in dia2:
-        peers[box].update(dia2) # add diagonal peer
-        peers[box].remove(box) # remove itself in peer
-
-    print (peers['E5'])
-
+    # solve the sudoku
     su_dict = solve(diag_sudoku_grid)
+
     print ("final result...")
     display(su_dict)
-    # display(solve(example_grid))
 
     try:
         from visualize import visualize_assignments
@@ -218,3 +227,4 @@ if __name__ == '__main__':
         pass
     except:
         print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+

@@ -3,7 +3,7 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: Search every box whose length is 2. Next, find their peers whether it has the same value in box.
+A: Search every box whose length is 2. Next, find the intersection of peers and remove digits includes in twins
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
