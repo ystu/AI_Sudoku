@@ -26,7 +26,6 @@ def naked_twins(values):
         the values dictionary with the naked twins eliminated from peers.
     """
 
-
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
     for box in values.keys():
@@ -39,7 +38,6 @@ def naked_twins(values):
                     inter_peers = set(peers[box]) & set(peers[peer])
                     # same twins, remove other digit
                     values = removeOtherDigit(values, inter_peers, twins) # e.g. twins '23'
-
 
     return values
 
@@ -69,19 +67,20 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-unitlist = row_units + column_units + square_units
+
 
 # two diagonal peer
-dia1 = [rows[i] + cols[i] for i in range(len(rows))]
-dia2 = [rows[i] + cols[len(rows) - i - 1] for i in range(len(rows))]
+dia1 = [[rows[i] + cols[i] for i in range(len(rows))]]
+dia2 = [[rows[i] + cols[len(rows) - i - 1] for i in range(len(rows))]]
+
 
 # add two diagonal into unitlist
-unitlist.append(dia1)
-unitlist.append(dia2)
+unitlist = row_units + column_units + square_units + dia1 + dia2
 
 # create peers
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
+
 
 
 def grid_values(grid):
@@ -120,6 +119,7 @@ def display(values):
         if r in 'CF': print(line)
     return
 
+
 def eliminate(values):
     solved_values = [box for box in values.keys() if len(values[box]) == 1]
     for box in solved_values:
@@ -128,25 +128,14 @@ def eliminate(values):
             values = assign_value(values, peer, values[peer].replace(digit,''))
     return values
 
+
 def only_choice(values):
     for unit in unitlist:
         for digit in '123456789':
             dplaces = [box for box in unit if digit in values[box]]
             if len(dplaces) == 1:
-                assign_value(values, dplaces[0], digit)
+                values = assign_value(values, dplaces[0], digit)
     return values
-
-def haveTwins(values, twin):
-    # if len > 2, it's not twins
-    if(len(values[twin]) != 2):
-        return False
-    # check each peers to find twins
-    for box in peers[twin]:
-        if values[box] == twin:
-            return True
-
-    # there are no twins
-    return False
 
 
 def reduce_puzzle(values):
@@ -170,14 +159,18 @@ def reduce_puzzle(values):
             return False
     return values
 
+
 def search(values):
     values = reduce_puzzle(values)
     if values is False:
         return False ## Failed earlier
+
     if all(len(values[s]) == 1 for s in boxes):
         return values ## Solved!
+
     # Choose one of the unfilled squares with the fewest possibilities
     n,s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
+
     # Now use recurrence to solve each one of the resulting sudokus, and
     for value in values[s]:
         new_sudoku = values.copy()
@@ -185,6 +178,7 @@ def search(values):
         attempt = search(new_sudoku)
         if attempt:
             return attempt
+
 
 def solve(grid):
     """
@@ -197,18 +191,14 @@ def solve(grid):
     """
     # creat sudoku dictionary
     su_dict = grid_values(grid)
-    su_dict = reduce_puzzle(su_dict)
+    su_dict = search(su_dict)
 
-    if su_dict == False:
-        return False
-    else:
-        return su_dict
-
-
+    return su_dict
 
 
 if __name__ == '__main__':
-    diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    # diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    diag_sudoku_grid = '9.1....8.8.5.7..4.2.4....6...7......5..............83.3..6......9................'
 
     print ("initialize...")
     display(grid_values(diag_sudoku_grid))
