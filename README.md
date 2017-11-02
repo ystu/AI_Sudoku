@@ -6,12 +6,14 @@ Q: How do we use constraint propagation to solve the naked twins problem?
 A: 
 Naked twins as a strategy to reduce the number of possibilities. 
 There are two steps below:
-1. For each two digits box, find their peers which has the same number in box
-2. Eliminate two digits from the intersection of the twins.
+1. For each two digits box, find their peers which has the same number in the box.
+2. Eliminate two digits from the intersection of the twins, because these two digits are not allow to exist in the peers of the twins.
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
-A: for each box in diagonal, add corresponding diagonal box into their peer
+A: 
+For diagonal boxes, include them as a additional unit in sudoku. All the diagonal boxes have the corresponding diagonal boxes as their peers.
+
 
 ### Install
 
